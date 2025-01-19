@@ -12,7 +12,7 @@ module.exports = {
         alias: {
             '@components': path.resolve(__dirname, 'src/components/'),
             '@utils': path.resolve(__dirname, 'src/utils/'),
-        }
+        },
     },
     module: {
         rules: [
@@ -21,16 +21,25 @@ module.exports = {
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
+            {
+                // ADD THIS RULE for .css files
+                test: /\.css$/,
+                use: [
+                    'style-loader', // 2. Inject CSS into the DOM
+                    'css-loader',   // 1. Resolve @import and url() in CSS
+                ],
+                exclude: /node_modules/,
+            },
         ],
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './src/index.html',
+            template: './src/index.html', // If your HTML is in src/
         }),
     ],
     devServer: {
         static: {
-            directory: path.join(__dirname, 'dist'),
+            directory: path.join(__dirname, 'public'),
         },
         historyApiFallback: true,
     },

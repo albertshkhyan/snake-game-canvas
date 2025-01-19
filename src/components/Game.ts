@@ -1,3 +1,4 @@
+// src/components/Game.ts (example path)
 import { Renderer } from './Renderer';
 import { Snake } from './Snake';
 import { Food } from './Food';
@@ -8,73 +9,129 @@ export class Game {
     private readonly food: Food;
     private readonly canvasWidth: number;
     private readonly canvasHeight: number;
+
     private intervalId: NodeJS.Timeout | undefined;
 
-    constructor(renderer: Renderer, snake: Snake, food: Food, canvasWidth: number, canvasHeight: number) {
+    private score: number;
+    private bestScore: number = 0;
+
+    private readonly handleKeyDownBound: (event: KeyboardEvent) => void;
+
+    constructor(
+        renderer: Renderer,
+        snake: Snake,
+        food: Food,
+        canvasWidth: number,
+        canvasHeight: number
+    ) {
         this.renderer = renderer;
         this.snake = snake;
         this.food = food;
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
-        this.intervalId = undefined; // Initialize intervalId to null
+
+        this.intervalId = undefined;
+        this.score = 0;
+
+        this.handleKeyDownBound = this.handleKeyDown.bind(this);
     }
 
     // Start the game loop
     start(): void {
-        this.intervalId = setInterval(() => this.gameLoop(), 100); // Adjust the interval as needed
+        // Prevent multiple intervals from stacking
+        if (this.intervalId != null) return;
 
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
-        document.getElementById('restartButton')?.addEventListener('click', this.handleRestartClick.bind(this));
+        this.intervalId = setInterval(() => this.gameLoop(), 100);
 
+        document.addEventListener('keydown', this.handleKeyDownBound);
+        document
+            .getElementById('restartButton')
+            ?.addEventListener('click', () => {
+                this.handleRestartClick();
+            });
     }
 
-    // Stop the game loop
-    stop(): void {
-        clearInterval(this.intervalId);
+    /**
+     * Stop the game loop, optionally show the "Game Over" overlay
+     */
+    stop(showOverlay = false): void {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
+        }
 
-        // Remove event listener for keyboard input
-        document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+        document.removeEventListener('keydown', this.handleKeyDownBound);
+
+        if (showOverlay) {
+            // Show the overlay
+            const overlay = document.getElementById('gameOverOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+        }
     }
 
     private handleRestartClick(): void {
-        // Stop the previous game loop before resetting
-        this.stop();
+        // Stop without showing the overlay
+        this.stop(false);
 
-        // Reset snake state
+        // Hide the overlay if it was previously visible
+        const overlay = document.getElementById('gameOverOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+
+        // Reset snake, score, and reposition food
+        this.score = 0;
         const initialPosition = { x: 0, y: 0 };
         this.snake.reset(initialPosition);
-
-        // Generate new food position
         this.food.generateNewPosition(this.canvasWidth, this.canvasHeight);
 
-        // Restart game loop
+        // Restart the loop
         this.start();
     }
 
-    // Game loop
+// Then in your "gameLoop" or wherever you increment score:
     private gameLoop(): void {
-        this.snake.update(); // Update snake position
+        this.snake.update();
+
         if (this.snake.checkCollision(this.canvasWidth, this.canvasHeight)) {
-            this.stop(); // Stop the game if snake collides with boundaries or itself
-            this.renderer.displayMessage('Game Over');
+            this.stop(true);
             return;
         }
+
         if (this.snakeHasEatenFood()) {
-            this.snake.increaseLength(); // Increase snake's length if it eats food
-            this.food.generateNewPosition(this.canvasWidth, this.canvasHeight); // Generate new food position
+            this.snake.increaseLength();
+            this.food.generateNewPosition(this.canvasWidth, this.canvasHeight);
+
+            this.score += 1;
+
+            const currentScoreElem = document.getElementById('currentScore');
+            if (currentScoreElem) {
+                currentScoreElem.textContent = this.score.toString();
+            }
+
+            // Update bestScore if you want a high score
+            if (this.score > this.bestScore) {
+                this.bestScore = this.score;
+                const bestScoreElem = document.getElementById('bestScore');
+                if (bestScoreElem) {
+                    bestScoreElem.textContent = this.bestScore.toString();
+                }
+            }
         }
-        this.renderer.renderGame(this.snake, this.food); // Render game elements including the food
+
+        this.renderer.renderGame(this.snake, this.food, this.score);
     }
 
-    // Check if the snake has eaten the food
+
     private snakeHasEatenFood(): boolean {
         const snakeHead = this.snake.getHeadPosition();
         const foodPosition = this.food.getPosition();
         return snakeHead.x === foodPosition.x && snakeHead.y === foodPosition.y;
     }
 
-    // Handle keydown events
-    handleKeyDown(event: KeyboardEvent): void {
+    private handleKeyDown(event: KeyboardEvent): void {
         switch (event.key) {
             case 'ArrowUp':
                 this.snake.setDirection('up');

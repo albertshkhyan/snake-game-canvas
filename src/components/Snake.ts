@@ -1,6 +1,6 @@
 export class Snake {
     private readonly body: { x: number; y: number }[];
-    private direction: string;
+    private _direction: string;
     private readonly _size: number;
     private readonly _color: string;
     private readonly _initialWidth: number;
@@ -9,18 +9,18 @@ export class Snake {
     constructor(initialPosition: { x: number; y: number }, size: number, color: string, initialWidth: number = 1) {
         console.log('Initializing snake with initial position:', initialPosition);
 
-        // this.body = [initialPosition];
         this.body = [];
         for (let i = 0; i < initialWidth; i++) {
-            // Adjust the x-coordinate calculation to space out the segments properly
+            // Space out the segments
             this.body.push({ x: initialPosition.x - i * size, y: initialPosition.y });
         }
-        this.direction = 'right';
+        this._direction = 'right';
         this._size = size;
         this._color = color;
         this._initialWidth = initialWidth;
     }
 
+    // If you still want color from the Snake (not just from CSS)
     get color(): string {
         return this._color;
     }
@@ -29,20 +29,25 @@ export class Snake {
         return this._size;
     }
 
+    /**
+     *  NEW: Public getter for the direction
+     */
+    get direction(): string {
+        return this._direction;
+    }
+
     reset(initialPosition: { x: number; y: number }): void {
         console.log('Resetting snake with initial position:', initialPosition);
 
         // Clear the existing body
         this.body.length = 0;
 
-        // Reinitialize the body with the correct number of segments and positions
+        // Reinitialize
         for (let i = 0; i < this._initialWidth; i++) {
-            // Adjust the x-coordinate calculation to space out the segments properly
             this.body.push({ x: initialPosition.x - i * this._size, y: initialPosition.y });
         }
 
-        // Reset the direction
-        this.direction = 'right';
+        this._direction = 'right';
     }
 
     getBody(): { x: number; y: number }[] {
@@ -54,23 +59,23 @@ export class Snake {
     }
 
     setDirection(direction: string): void {
-        // Ensure the snake cannot reverse its direction
+        // Prevent reversing
         if (
-            (direction === 'up' && this.direction !== 'down') ||
-            (direction === 'down' && this.direction !== 'up') ||
-            (direction === 'left' && this.direction !== 'right') ||
-            (direction === 'right' && this.direction !== 'left')
+            (direction === 'up' && this._direction !== 'down') ||
+            (direction === 'down' && this._direction !== 'up') ||
+            (direction === 'left' && this._direction !== 'right') ||
+            (direction === 'right' && this._direction !== 'left')
         ) {
-            this.direction = direction;
+            this._direction = direction;
         }
     }
 
     update(): void {
-        // Move the snake in the current direction
+        // Move the snake
         let newX = this.body[0].x;
         let newY = this.body[0].y;
 
-        switch (this.direction) {
+        switch (this._direction) {
             case 'up':
                 newY -= this.getSize();
                 break;
@@ -87,45 +92,36 @@ export class Snake {
 
         console.log('New head position:', { x: newX, y: newY });
 
-
-        // Add the new head position to the beginning of the snake's body
+        // Add new head position
         this.body.unshift({ x: newX, y: newY });
 
-        // Check if the snake has eaten food (length should increase)
-        // If it hasn't, remove the last segment to maintain its length
+        // If it hasn’t eaten food, remove the tail segment
         if (!this.hasEatenFood) {
             this.body.pop();
         }
-
-        // Reset the flag for the next update cycle
         this.hasEatenFood = false;
     }
 
     increaseLength(): void {
-        // Add a new segment to the snake's body when it eats food
+        // Extend the snake’s body
         const lastSegment = this.body[this.body.length - 1];
         this.body.push({ x: lastSegment.x, y: lastSegment.y });
-
-        // Set the flag to indicate that the snake has eaten food
         this.hasEatenFood = true;
     }
 
     checkCollision(canvasWidth: number, canvasHeight: number): boolean {
-        // Check if the snake collides with the canvas boundaries or itself
+        // Collide with boundaries?
         const head = this.body[0];
-
-        // Check if the head collides with the canvas boundaries
         if (head.x < 0 || head.x >= canvasWidth || head.y < 0 || head.y >= canvasHeight) {
             return true;
         }
 
-        // Check if the head collides with the body segments (except the head itself)
+        // Collide with itself?
         for (let i = 1; i < this.body.length; i++) {
             if (head.x === this.body[i].x && head.y === this.body[i].y) {
                 return true;
             }
         }
-
         return false;
     }
 }

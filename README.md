@@ -29,15 +29,19 @@ To run the Snake Game Canvas locally, follow these steps:
 
 ## Usage
 
-Once the game is running, use the arrow keys on your keyboard to control the direction of the snake. Try to eat as much food as possible without running into the walls or yourself.
+Once the game is running, use the arrow keys on your keyboard to control the snake’s direction. Try to eat as much food as possible without running into the walls or yourself.
 
 ## Demo
 
-You can try out a live demo of Snake Game Canvas [here](#) (demo link to be inserted).
+You can see a **preview** of the gameplay below:
+
+![Snake Game Canvas Demo](./public/assets/screen-capture4-ezgif.com-crop.gif)
+
+*(Optionally add a live link or additional screenshots if you have them.)*
 
 ## Contributing
 
-Contributions to Snake Game Canvas are welcome! Here's how you can contribute:
+Contributions to Snake Game Canvas are welcome! Here’s how you can contribute:
 
 1. Fork the repository.
 2. Make your changes.
